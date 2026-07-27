@@ -1,49 +1,49 @@
-name: Build Kivy APK
+[app]
 
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+# -----------------------------------------------------------------------------
+# ОСНОВНЫЕ НАСТРОЙКИ
+# -----------------------------------------------------------------------------
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Проверка кода
-        uses: actions/checkout@v4
+title = Моё первое приложение
+package.name = myfirstapp
+package.domain = org.myorg
 
-      - name: Установка Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+# -----------------------------------------------------------------------------
+# ИСХОДНЫЙ КОД
+# -----------------------------------------------------------------------------
 
-      - name: Установка зависимостей (исправлено для Ubuntu 24.04)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            git zip unzip \
-            openjdk-17-jdk \
-            python3-pip \
-            autoconf libtool pkg-config \
-            zlib1g-dev libncurses5-dev libncursesw5-dev \
-            cmake libffi-dev libssl-dev \
-            liblzma-dev libbz2-dev \
-            libtinfo6
+source.dir = .
+source.include_exts = py,png,jpg,kv,atlas,ttf,wav
+source.exclude_exts = spec
+source.exclude_dirs = tests, bin, docs, examples
 
-          # СОЗДАЁМ СИМВОЛИЧЕСКУЮ ССЫЛКУ: libtinfo5 → libtinfo6
-          sudo ln -s /usr/lib/x86_64-linux-gnu/libtinfo.so.6 /usr/lib/x86_64-linux-gnu/libtinfo.so.5
+# -----------------------------------------------------------------------------
+# ЗАВИСИМОСТИ (фиксированные версии)
+# -----------------------------------------------------------------------------
 
-      - name: Установка Buildozer
-        run: |
-          pip install --upgrade pip
-          pip install buildozer
+requirements = python3==3.11.1, kivy==2.3.0
 
-      - name: Сборка APK
-        run: buildozer -v android debug
+# -----------------------------------------------------------------------------
+# НАСТРОЙКИ ЭКРАНА
+# -----------------------------------------------------------------------------
 
-      - name: Загрузка APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: kivy-apk
-          path: bin/*.apk
+orientation = portrait
+fullscreen = 1
+
+# -----------------------------------------------------------------------------
+# НАСТРОЙКИ ANDROID
+# -----------------------------------------------------------------------------
+
+android.permissions = INTERNET, ACCESS_NETWORK_STATE
+android.api = 33
+android.minapi = 24
+android.ndk = 23b
+android.archs = armeabi-v7a, arm64-v8a
+android.version_code = 1
+android.version_name = 1.0
+
+# -----------------------------------------------------------------------------
+# ЛОГИ
+# -----------------------------------------------------------------------------
+
+log_level = 2
