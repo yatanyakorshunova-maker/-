@@ -1,105 +1,49 @@
-[app]
+name: Build Kivy APK
 
-# -----------------------------------------------------------------------------
-# ОСНОВНЫЕ НАСТРОЙКИ
-# -----------------------------------------------------------------------------
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
-# Название приложения (на рабочем столе телефона)
-title = Моё первое приложение
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Проверка кода
+        uses: actions/checkout@v4
 
-# Внутреннее имя пакета (только латиница, без пробелов)
-package.name = myfirstapp
+      - name: Установка Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-# Домен (обычно org.имя)
-package.domain = org.myorg
+      - name: Установка зависимостей (исправлено для Ubuntu 24.04)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git zip unzip \
+            openjdk-17-jdk \
+            python3-pip \
+            autoconf libtool pkg-config \
+            zlib1g-dev libncurses5-dev libncursesw5-dev \
+            cmake libffi-dev libssl-dev \
+            liblzma-dev libbz2-dev \
+            libtinfo6
 
-# -----------------------------------------------------------------------------
-# ИСХОДНЫЙ КОД
-# -----------------------------------------------------------------------------
+          # СОЗДАЁМ СИМВОЛИЧЕСКУЮ ССЫЛКУ: libtinfo5 → libtinfo6
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libtinfo.so.6 /usr/lib/x86_64-linux-gnu/libtinfo.so.5
 
-# Папка с кодом
-source.dir = .
+      - name: Установка Buildozer
+        run: |
+          pip install --upgrade pip
+          pip install buildozer
 
-# Какие расширения включать
-source.include_exts = py,png,jpg,kv,atlas,ttf,wav
+      - name: Сборка APK
+        run: buildozer -v android debug
 
-# Какие расширения исключить
-source.exclude_exts = spec
-
-# Какие папки исключить
-source.exclude_dirs = tests, bin, docs, examples
-
-# -----------------------------------------------------------------------------
-# ЗАВИСИМОСТИ (ВАЖНО: фиксированная версия Python)
-# -----------------------------------------------------------------------------
-
-# Python 3.11.1 — стабильная версия для сборки Android
-requirements = python3==3.11.1, kivy==2.3.0
-
-# -----------------------------------------------------------------------------
-# НАСТРОЙКИ ЭКРАНА
-# -----------------------------------------------------------------------------
-
-# Ориентация: portrait (вертикальная) или landscape
-orientation = portrait
-
-# Полноэкранный режим
-fullscreen = 1
-
-# -----------------------------------------------------------------------------
-# НАСТРОЙКИ ANDROID (исправлены для совместимости)
-# -----------------------------------------------------------------------------
-
-# Разрешения
-android.permissions = INTERNET, ACCESS_NETWORK_STATE
-
-# Версия Android API (33 = Android 13)
-android.api = 33
-
-# Минимальная версия Android (изменено с 21 на 24 для стабильности)
-android.minapi = 24
-
-# Версия NDK (23b — стабильная)
-android.ndk = 23b
-
-# Архитектуры процессоров
-android.archs = armeabi-v7a, arm64-v8a
-
-# Версия приложения
-android.version_code = 1
-android.version_name = 1.0
-
-# -----------------------------------------------------------------------------
-# ИКОНКА (если есть)
-# -----------------------------------------------------------------------------
-
-# icon.filename = icon.png
-
-# Цвет заставки
-# android.presplash_color = #FFFFFF
-
-# -----------------------------------------------------------------------------
-# ЛОГИ И ОТЛАДКА
-# -----------------------------------------------------------------------------
-
-# Уровень логов: 0-2 (2 = максимум)
-log_level = 2
-
-# Режим отладки
-# android.debug = 1
-
-# -----------------------------------------------------------------------------
-# ДОПОЛНИТЕЛЬНЫЕ НАСТРОЙКИ (не меняйте)
-# -----------------------------------------------------------------------------
-
-# Игнорируемые файлы
-# ignore = 
-
-# Дополнительные папки с кодом
-# android.add_src =
-
-# Зависимости Gradle
-# android.gradle_dependencies =
-
-# Отключить проверку обновлений
-# android.auto_whitelist = 1
+      - name: Загрузка APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: kivy-apk
+          path: bin/*.apk
